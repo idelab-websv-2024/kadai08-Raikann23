@@ -1,4 +1,5 @@
-<!DOCTYPE="utf-8">
+<!DOCTYPE html>
+<html>
   <head>
     <title></title>
 
@@ -20,11 +21,13 @@
 
     function startRequest() {
         var statusField = document.getElementById('status');
-        var s = '手嶌';
-        alert(s);
+        var s = document.getElementById('searchTerm').value;
+       // alert(s);
         var searchString = encodeURIComponent(s);
-        alert(searchString);
-
+        
+      //  alert(searchString);
+      //artworkUrl100 & preview
+      
         var iTunesURI = 'https://itunes.apple.com/search?term='+searchString+'&callback=searchCallback';
         document.getElementById('caller').setAttribute('src', iTunesURI);
 
@@ -40,6 +43,7 @@
 <div id='outputArea'></div>
 <input type='button' id='searchWord' value='検索' onclick="startRequest()"/>
 
+<input type='input' id='searchTerm'>
 
 <script id='caller'></script>
 
