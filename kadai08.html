@@ -1,52 +1,122 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <title></title>
-
     <script>
-    // https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/#searchexamples
+        let audioElements = [];
+        let currentIndex = 0;
 
-    function searchCallback(result) {
-        output = document.getElementById('outputArea');
-        results = result.results;
-        for (var r of results) {
-            var oneline = document.createElement('div');
-            oneline.innerHTML = r["collectionName"];
-            oneline.innerHTML += "<br>";
-            oneline.innerHTML += r["artistName"];
-            oneline.innerHTML += "<hr />";
-            output.appendChild(oneline);
+        function searchCallback(result) {
+            var output = document.getElementById('outputArea');
+            output.innerHTML = ""; 
+            audioElements = []; 
+            currentIndex = 0;
+
+            var results = result.results;
+
+            var table = document.createElement('table');
+            table.border = '1';
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+
+            var headerRow = table.insertRow();
+            headerRow.insertCell().innerText = 'Album Image';
+            headerRow.insertCell().innerText = 'Track Name';
+            headerRow.insertCell().innerText = 'Artist Name';
+            headerRow.insertCell().innerText = 'Album Link';
+            headerRow.insertCell().innerText = 'Preview';
+
+            for (var r of results) {
+                var row = table.insertRow();
+
+                var imgCell = row.insertCell();
+                var img = document.createElement('img');
+                img.src = r["artworkUrl60"];
+                img.alt = 'Album Image';
+                imgCell.appendChild(img);
+
+                var trackCell = row.insertCell();
+                trackCell.innerText = r["trackCensoredName"] || 'N/A';
+
+                var artistCell = row.insertCell();
+                artistCell.innerText = r["artistName"] || 'N/A';
+
+                var linkCell = row.insertCell();
+                if (r["collectionArtistViewUrl"]) {
+                    var link = document.createElement('a');
+                    link.href = r["collectionArtistViewUrl"];
+                    link.target = '_blank';
+                    link.innerText = 'View Album';
+                    linkCell.appendChild(link);
+                } else {
+                    linkCell.innerText = 'N/A';
+                }
+
+                var previewCell = row.insertCell();
+                if (r["previewUrl"]) {
+                    var audio = document.createElement('audio');
+                    audio.src = r["previewUrl"];
+                    audio.preload = 'metadata';
+                    audio.onloadedmetadata = function() {
+                        calculateTotalTime();
+                    };
+                    audioElements.push(audio);
+                    previewCell.appendChild(audio);
+                } else {
+                    previewCell.innerText = 'N/A';
+                }
+            }
+
+            output.appendChild(table);
+            playAllAudio();
         }
-    }
 
-    function startRequest() {
-        var statusField = document.getElementById('status');
-        var s = document.getElementById('searchTerm').value;
-       // alert(s);
-        var searchString = encodeURIComponent(s);
-        
-      //  alert(searchString);
-      //artworkUrl100 & preview
-      
-        var iTunesURI = 'https://itunes.apple.com/search?term='+searchString+'&callback=searchCallback';
-        document.getElementById('caller').setAttribute('src', iTunesURI);
+        function playAllAudio() {
+            if (audioElements.length === 0) return;
 
-        statusField.innerHTML = '';
-    }
+            audioElements[currentIndex].play();
+            audioElements[currentIndex].onended = function() {
+                currentIndex++;
+                if (currentIndex < audioElements.length) {
+                    playAllAudio();
+                } else {
+                    alert('All tracks finished playing');
+                }
+            };
+        }
+
+        function calculateTotalTime() {
+            let totalDuration = 0;
+            for (let audio of audioElements) {
+                if (!isNaN(audio.duration)) {
+                    totalDuration += audio.duration;
+                }
+            }
+            document.getElementById('totalTime').innerText = 'Total play time: ' + Math.floor(totalDuration / 60) + ' min ' + Math.floor(totalDuration % 60) + ' sec';
+        }
+
+        function startRequest() {
+            var statusField = document.getElementById('status');
+            var s = document.getElementById('searchTerm').value.trim();
+            if (!s) {
+                statusField.innerText = 'Please enter an artist name.';
+                return;
+            }
+
+            var searchString = encodeURIComponent(s);
+            var iTunesURI = 'https://itunes.apple.com/search?term=' + searchString + '&callback=searchCallback&entity=musicTrack&limit=10';
+            document.getElementById('caller').setAttribute('src', iTunesURI);
+
+            statusField.innerHTML = 'Searching...';
+        }
     </script>
+</head>
 
-  </head>
-  
-  <body>
-
-<div id='status'></div>
-<div id='outputArea'></div>
-<input type='button' id='searchWord' value='検索' onclick="startRequest()"/>
-
-<input type='input' id='searchTerm'>
-
-<script id='caller'></script>
-
-  </body>
+<body>
+    <div id='status'></div>
+    <div id='outputArea'></div>
+    <input type='text' id='searchTerm'  />
+    <input type='button' id='searchWord' value='Search' onclick="startRequest()" />
+    <script id='caller'></script>
+</body>
 </html>
-
