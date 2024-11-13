@@ -9,14 +9,37 @@
 
     function searchCallback(result) {
         output = document.getElementById('outputArea');
+        output.innerHTML = ""; 
         results = result.results;
+
         for (var r of results) {
-            var oneline = document.createElement('div');
-            oneline.innerHTML = r["collectionName"];
+          var oneline = document.createElement('div');
+            oneline.innerHTML = r.collectionName;
             oneline.innerHTML += "<br>";
-            oneline.innerHTML += r["artistName"];
-            oneline.innerHTML += "<hr />";
+
+            oneline.innerHTML += r.artistName;
+            oneline.innerHTML += "<br>";
+
+            oneline.innerHTML += '<img src="' + r.artworkUrl60 + '" >';
+            oneline.innerHTML += "<br>";
+
+
+            oneline.innerHTML += r.trackCensoredName;
+            oneline.innerHTML += "<br>";
+
+          var audio = document.createElement('audio');
+              audio.controls = true;
+
+          var source = document.createElement('source');
+              source.src = r.previewUrl;
+
+              audio.appendChild(source);
+              oneline.appendChild(audio);         
+              oneline.innerHTML += "<hr />";
+            
             output.appendChild(oneline);
+
+
         }
     }
 
